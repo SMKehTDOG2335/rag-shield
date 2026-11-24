@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,ml]"
       - run: pytest -q
       - run: python -m rag_shield eval
 
@@ -31,3 +31,16 @@ jobs:
       - run: pip install -e ".[dev,dense]"
       - run: python -m rag_shield --hybrid eval
       - run: python -m rag_shield --hybrid ask "What is the maximum bug bounty payout?"
+
+  ml-benchmark:
+    # Downloads protectai/deberta-v3-base-prompt-injection-v2 (ONNX) and
+    # benchmarks rules vs ML vs layered on the public deepset/prompt-injections test set.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[ml]"
+      - run: python -m rag_shield --ml benchmark
+      - run: python -m rag_shield --ml eval

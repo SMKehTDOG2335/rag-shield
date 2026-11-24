@@ -105,11 +105,13 @@ class GuardResult:
     score: float
     matches: list[str] = field(default_factory=list)
     signals: list[str] = field(default_factory=list)
+    ml_score: float | None = None  # set when an ML classifier was consulted
 
     def explain(self) -> str:
         if not self.flagged:
             return "clean"
-        return f"score={self.score:.2f} rules={', '.join(self.matches + self.signals)}"
+        ml = f" ml={self.ml_score:.2f}" if self.ml_score is not None else ""
+        return f"score={self.score:.2f} rules={', '.join(self.matches + self.signals)}{ml}"
 
 
 def normalize(text: str) -> tuple[str, list[str]]:
