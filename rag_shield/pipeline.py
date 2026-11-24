@@ -2,7 +2,7 @@
 
 Layers, in order:
 1. Input guard      - block direct prompt injection in the user query.
-2. Retrieval        - BM25 over chunked documents (over-fetch for headroom).
+2. Retrieval        - BM25 or hybrid BM25+dense (over-fetch for headroom).
 3. Context guard    - strip injected segments from retrieved chunks; quarantine
                       a chunk entirely if it is still unsafe after sanitising.
 4. Spotlighting     - wrap surviving chunks as delimited, untrusted data.
@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from .chunking import Chunk
 from .guard import GuardResult, InjectionGuard
 from .llm import LLM, ContextDoc, ExtractiveLLM
-from .retrieval import BM25Retriever
+from .retrieval import BM25Retriever, Retriever
 
 SYSTEM_TEMPLATE = """You are a careful assistant that answers questions using ONLY the
 retrieved documents provided by the user turn.
@@ -43,7 +43,10 @@ class Answer:
     invalid_citations: list[str] = field(default_factory=list)
     retrieved: list[str] = field(default_factory=list)
     quarantined: dict[str, str] = field(default_factory=dict)
-    sanitised: dict[str, list[list[str]]] = field(default_factory=dict)
+    # chunk id -> removed segments, each {"text": ..., "rules": [...]}
+    sanitised: dict[str, list[dict]] = field(default_factory=dict)
+    # Exactly what the LLM was shown, after sanitisation: [(chunk id, text)]
+    context: list[tuple[str, str]] = field(default_factory=list)
     query_guard: GuardResult | None = None
     events: list[str] = field(default_factory=list)
 
@@ -58,9 +61,10 @@ class SecureRAG:
         overfetch: int = 2,
         scan_context: bool = True,
         min_clean_words: int = 8,
+        retriever: Retriever | None = None,
     ):
         self.min_clean_words = min_clean_words
-        self.retriever = BM25Retriever(chunks)
+        self.retriever = retriever or BM25Retriever(chunks)
         self.llm = llm or ExtractiveLLM()
         self.guard = guard or InjectionGuard()
         self.top_k = top_k
@@ -96,7 +100,9 @@ class SecureRAG:
                         ans.quarantined[cid] = verdict.explain()
                         ans.events.append(f"quarantined {cid} ({verdict.explain()})")
                         continue
-                    ans.sanitised[cid] = [rules for _, rules in clean.removed]
+                    ans.sanitised[cid] = [
+                        {"text": segment, "rules": rules} for segment, rules in clean.removed
+                    ]
                     ans.events.append(
                         f"sanitised {cid}: removed {len(clean.removed)} injected segment(s) "
                         f"({verdict.explain()})"
@@ -106,6 +112,7 @@ class SecureRAG:
             if len(context) == self.top_k:
                 break
         ans.retrieved = [d.doc_id for d in context]
+        ans.context = [(d.doc_id, d.text) for d in context]
 
         if not context:
             ans.text = "I don't know based on the provided documents."

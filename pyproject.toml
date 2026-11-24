@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rag-shield"
-version = "0.1.0"
+version = "0.2.0"
 description = "A retrieval-augmented generation pipeline hardened against prompt injection"
 readme = "README.md"
 license = { text = "MIT" }
@@ -15,6 +15,8 @@ keywords = ["rag", "llm", "llm-security", "prompt-injection", "bm25", "retrieval
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+dense = ["fastembed>=0.4"]
+demo = ["streamlit>=1.30", "fastembed>=0.4"]
 
 [project.scripts]
 rag-shield = "rag_shield.cli:main"

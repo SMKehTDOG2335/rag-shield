@@ -8,7 +8,7 @@ from pathlib import Path
 from .chunking import Chunk
 from .guard import InjectionGuard
 from .pipeline import SecureRAG
-from .retrieval import BM25Retriever
+from .retrieval import BM25Retriever, Retriever
 
 
 def _load_jsonl(path: str | Path) -> list[dict]:
@@ -22,6 +22,7 @@ class RetrievalReport:
     hit_at_1: float
     hit_at_3: float
     mrr: float
+    misses: list[str]
 
 
 @dataclass
@@ -41,10 +42,16 @@ class AttackReport:
     details: list[dict]
 
 
-def evaluate_retrieval(chunks: list[Chunk], qa_path: str | Path, k: int = 3) -> RetrievalReport:
-    retriever = BM25Retriever(chunks)
+def evaluate_retrieval(
+    chunks: list[Chunk],
+    qa_path: str | Path,
+    k: int = 3,
+    retriever: Retriever | None = None,
+) -> RetrievalReport:
+    retriever = retriever or BM25Retriever(chunks)
     rows = _load_jsonl(qa_path)
     h1 = h3 = rr = 0.0
+    misses: list[str] = []
     for row in rows:
         sources = [s.chunk.source for s in retriever.search(row["question"], k=10)]
         # De-duplicate sources while keeping rank order.
@@ -54,8 +61,12 @@ def evaluate_retrieval(chunks: list[Chunk], qa_path: str | Path, k: int = 3) -> 
             rr += 1 / rank
             h1 += rank == 1
             h3 += rank <= k
+            if rank > 1:
+                misses.append(row["question"])
+        else:
+            misses.append(row["question"])
     n = len(rows)
-    return RetrievalReport(n, h1 / n, h3 / n, rr / n)
+    return RetrievalReport(n, h1 / n, h3 / n, rr / n, misses)
 
 
 def evaluate_guard(guard: InjectionGuard, labelled_path: str | Path) -> GuardReport:

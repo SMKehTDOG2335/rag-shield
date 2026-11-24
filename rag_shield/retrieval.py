@@ -5,6 +5,7 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass
+from typing import Protocol
 
 from .chunking import Chunk
 
@@ -34,6 +35,10 @@ def tokenize(text: str) -> list[str]:
 class ScoredChunk:
     chunk: Chunk
     score: float
+
+
+class Retriever(Protocol):
+    def search(self, query: str, k: int = 5) -> list[ScoredChunk]: ...
 
 
 class BM25Retriever:

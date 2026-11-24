@@ -1,21 +1,33 @@
-"""Command-line interface: rag-shield ask|scan|eval."""
+"""Command-line interface: rag-shield [--hybrid] ask|scan|eval."""
 from __future__ import annotations
 
 import argparse
 import sys
 from pathlib import Path
 
-from .chunking import load_corpus
+from .chunking import Chunk, load_corpus
 from .evaluate import evaluate_attacks, evaluate_guard, evaluate_retrieval
 from .guard import InjectionGuard
 from .llm import llm_from_env
 from .pipeline import SecureRAG
+from .retrieval import BM25Retriever, Retriever
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
 
+def build_retriever(chunks: list[Chunk], hybrid: bool) -> Retriever:
+    if not hybrid:
+        return BM25Retriever(chunks)
+    from .dense import FastEmbedEmbedder, HybridRetriever
+
+    return HybridRetriever(chunks, FastEmbedEmbedder())
+
+
 def _cmd_ask(args: argparse.Namespace) -> int:
-    rag = SecureRAG(load_corpus(args.docs), llm=llm_from_env(), top_k=args.k)
+    chunks = load_corpus(args.docs)
+    rag = SecureRAG(
+        chunks, llm=llm_from_env(), top_k=args.k, retriever=build_retriever(chunks, args.hybrid)
+    )
     ans = rag.ask(args.question)
     print(f"\nAnswer ({rag.llm.name}):\n  {ans.text}\n")
     if ans.citations:
@@ -36,14 +48,18 @@ def _cmd_scan(args: argparse.Namespace) -> int:
 def _cmd_eval(args: argparse.Namespace) -> int:
     chunks = load_corpus(args.docs)
     eval_dir = Path(args.eval_dir)
-    r = evaluate_retrieval(chunks, eval_dir / "qa.jsonl")
+    retriever = build_retriever(chunks, args.hybrid)
+    label = "Hybrid BM25 + dense (RRF)" if args.hybrid else "BM25"
+    r = evaluate_retrieval(chunks, eval_dir / "qa.jsonl", retriever=retriever)
     g = evaluate_guard(InjectionGuard(), eval_dir / "injections.jsonl")
-    a = evaluate_attacks(SecureRAG(chunks), eval_dir / "attacks.jsonl")
-    print("Retrieval (BM25)")
+    a = evaluate_attacks(SecureRAG(chunks, retriever=retriever), eval_dir / "attacks.jsonl")
+    print(f"Retrieval ({label})")
     print(f"  questions : {r.n}")
     print(f"  hit@1     : {r.hit_at_1:.2%}")
     print(f"  hit@3     : {r.hit_at_3:.2%}")
     print(f"  MRR       : {r.mrr:.3f}")
+    for q in r.misses:
+        print("  not rank 1:", q)
     print("\nInjection guard")
     print(f"  samples   : {g.n}")
     print(f"  precision : {g.precision:.2%}")
@@ -65,6 +81,11 @@ def _cmd_eval(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="rag-shield", description=__doc__)
     parser.add_argument("--docs", default=str(DATA / "docs"), help="corpus directory")
+    parser.add_argument(
+        "--hybrid",
+        action="store_true",
+        help="use hybrid BM25 + dense retrieval (needs: pip install 'rag-shield[dense]')",
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_ask = sub.add_parser("ask", help="ask a question over the corpus")

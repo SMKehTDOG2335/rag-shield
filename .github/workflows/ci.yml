@@ -18,3 +18,16 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: pytest -q
       - run: python -m rag_shield eval
+
+  hybrid-eval:
+    # Downloads a real embedding model (BAAI/bge-small-en-v1.5, ONNX) and
+    # evaluates hybrid BM25 + dense retrieval end to end.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev,dense]"
+      - run: python -m rag_shield --hybrid eval
+      - run: python -m rag_shield --hybrid ask "What is the maximum bug bounty payout?"
