@@ -10,6 +10,9 @@ RAG systems feed retrieved documents straight into an LLM's context, so any docu
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue)
 ![Dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rag-shield-demo.streamlit.app)
+
+**▶ Live demo: [rag-shield-demo.streamlit.app](https://rag-shield-demo.streamlit.app)**. Try the poisoned-document examples, and switch the context guard off to watch an attack get through.
 
 ---
 
@@ -172,7 +175,7 @@ tests/           # 34 pytest tests, run in CI on Python 3.10–3.13
 - [ ] Optional ML classifier stage (e.g. a fine-tuned DeBERTa prompt-injection model) behind the rule layer
 - [ ] Larger public benchmarks for injection detection
 - [x] Streamlit UI that visualises which layer acted on each request
-- [ ] Hosted demo on Streamlit Community Cloud
+- [x] Hosted demo on Streamlit Community Cloud
 
 ## License
 
