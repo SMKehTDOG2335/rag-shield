@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-shield"
+version = "0.1.0"
+description = "A retrieval-augmented generation pipeline hardened against prompt injection"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Steve Mathews Korah" }]
+requires-python = ">=3.10"
+dependencies = []
+keywords = ["rag", "llm", "llm-security", "prompt-injection", "bm25", "retrieval"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+rag-shield = "rag_shield.cli:main"
+
+[tool.setuptools]
+packages = ["rag_shield"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

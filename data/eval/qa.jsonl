@@ -1,0 +1,24 @@
+{"question": "Can I get a refund on my annual subscription?", "source": "refund-policy.md"}
+{"question": "How long do refunds take to reach my card?", "source": "refund-policy.md"}
+{"question": "Are bandwidth overage charges refundable?", "source": "refund-policy.md"}
+{"question": "What compensation do I get when the uptime SLA is breached?", "source": "refund-policy.md"}
+{"question": "Which encryption algorithm protects data at rest?", "source": "security-policy.md"}
+{"question": "How often are encryption keys rotated?", "source": "security-policy.md"}
+{"question": "What is the maximum bug bounty payout?", "source": "security-policy.md"}
+{"question": "Can employees use SMS codes for MFA?", "source": "security-policy.md"}
+{"question": "How many API requests per minute does the Pro plan allow?", "source": "api-rate-limits.md"}
+{"question": "What status code is returned when I exceed the rate limit?", "source": "api-rate-limits.md"}
+{"question": "Are rate limits applied per IP address?", "source": "api-rate-limits.md"}
+{"question": "How long are application logs kept on the Enterprise plan?", "source": "data-retention.md"}
+{"question": "How often are database backups taken?", "source": "data-retention.md"}
+{"question": "In which formats can I export my data?", "source": "data-retention.md"}
+{"question": "How many days of annual leave do employees get?", "source": "leave-policy.md"}
+{"question": "How many unused holiday days can be carried over?", "source": "leave-policy.md"}
+{"question": "How long is parental leave for the primary caregiver?", "source": "leave-policy.md"}
+{"question": "When does a new engineer join the on-call rotation?", "source": "onboarding.md"}
+{"question": "When must secure coding training be completed?", "source": "onboarding.md"}
+{"question": "How quickly are vendor invoices paid?", "source": "vendor-faq.md"}
+{"question": "How much does the Pro plan cost per month?", "source": "pricing.md"}
+{"question": "Is there a discount for non-profits?", "source": "pricing.md"}
+{"question": "How long is the free trial?", "source": "pricing.md"}
+{"question": "Who helps new hires set up their development environment?", "source": "onboarding.md"}
